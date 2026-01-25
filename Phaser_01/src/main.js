@@ -29,6 +29,8 @@ var cursors;
 var score = 0;
 var gameOver = false;
 var scoreText;
+var textNivel;
+var level = 1;
 
 function preload() {
   this.load.image("sky", "assets/sky.png");
@@ -101,6 +103,12 @@ function create() {
     fill: "#000",
   });
 
+  // Texto del nivel
+  textNivel = this.add.text(625, 16, "Nivel: " + level, {
+    fontSize: "32px",
+    fill: "#000",
+  });
+
   // Colisiones y traslapes
   this.physics.add.collider(player, platforms);
   this.physics.add.collider(stars, platforms);
@@ -147,6 +155,8 @@ function collectStar(player, star) {
         ? Phaser.Math.Between(400, 800)
         : Phaser.Math.Between(0, 400);
 
+    level += 1;
+    textNivel.setText("Nivel:" + level);
     var bomb = bombs.create(x, 16, "bomb");
     bomb.setBounce(1);
     bomb.setCollideWorldBounds(true);
@@ -155,6 +165,11 @@ function collectStar(player, star) {
 }
 
 function hitBomb(player, bomb) {
+  scoreText = this.add.text(300, 300, " ", {
+    fontSize: "32px",
+    fill: "#892727",
+  });
+  scoreText.setText("FIN DEL JUEGO");
   this.physics.pause();
   player.setTint(0xff0000);
   player.anims.play("turn");
