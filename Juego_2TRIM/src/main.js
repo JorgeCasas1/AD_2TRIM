@@ -16,6 +16,11 @@ class MenuScene extends Phaser.Scene {
     this.load.image("fondoClasico", "assets/fondoClasico.png");
     this.load.image("fondoFantasma", "assets/fondoFantasma.png");
     this.load.image("fondoBowser", "assets/fondoBowser.png");
+
+    // AUDIOS
+    this.load.audio("musica_clasico", "assets/musica_clasico.mp3");
+    this.load.audio("musica_boo", "assets/musica_boo.mp3");
+    this.load.audio("musica_bowser", "assets/musica_bowser.mp3");
   }
 
   create() {
@@ -28,8 +33,8 @@ class MenuScene extends Phaser.Scene {
     const btnAventura = this.add
       .text(width / 2, height * 0.45, "MODO AVENTURA", {
         fontSize: "32px",
-        fill: "#fff",
-        backgroundColor: "#e74c3c",
+        fill: "white",
+        backgroundColor: "red",
         padding: 15,
       })
       .setOrigin(0.5)
@@ -38,8 +43,8 @@ class MenuScene extends Phaser.Scene {
     const btnMulti = this.add
       .text(width / 2, height * 0.6, "MULTIJUGADOR", {
         fontSize: "32px",
-        fill: "#fff",
-        backgroundColor: "#3498db",
+        fill: "white",
+        backgroundColor: "blue",
         padding: 15,
       })
       .setOrigin(0.5)
@@ -68,63 +73,61 @@ class MenuScene extends Phaser.Scene {
     };
 
     this.add
-      .text(w / 2, 50, "CONFIGURACIÓN", { fontSize: "30px", fill: "#fff" })
+      .text(w / 2, 50, "CONFIGURACIÓN", { fontSize: "30px", fill: "white" })
       .setOrigin(0.5);
 
     const textosP1 = [];
     const textosP2 = [];
     const textosMapas = [];
 
-    // Selección P1
     personajes.forEach((p, i) => {
       let t1 = this.add
         .text(w * 0.2, 150 + i * 45, "P1: " + p.toUpperCase(), {
           fontSize: "22px",
-          fill: p === p1S ? "#ff0" : "#fff",
+          fill: p === p1S ? "yellow" : "white",
         })
         .setInteractive();
       textosP1.push(t1);
       t1.on("pointerdown", () => {
         p1S = p;
-        textosP1.forEach((t) => t.setStyle({ fill: "#fff" }));
-        t1.setStyle({ fill: "#ff0" });
+        textosP1.forEach((t) => t.setStyle({ fill: "white" }));
+        t1.setStyle({ fill: "yellow" });
       });
 
-      // Selección P2
       let t2 = this.add
         .text(w * 0.5, 150 + i * 45, "P2: " + p.toUpperCase(), {
           fontSize: "22px",
-          fill: p === p2S ? "#0ff" : "#fff",
+          fill: p === p2S ? "cyan" : "white",
         })
         .setInteractive();
       textosP2.push(t2);
       t2.on("pointerdown", () => {
         p2S = p;
-        textosP2.forEach((t) => t.setStyle({ fill: "#fff" }));
-        t2.setStyle({ fill: "#0ff" });
+        textosP2.forEach((t) => t.setStyle({ fill: "white" }));
+        t2.setStyle({ fill: "cyan" });
       });
     });
 
-    // Selección Mapas con nombres personalizados
     mapas.forEach((m, i) => {
       let tm = this.add
         .text(w * 0.8, 150 + i * 45, nombresMapas[m], {
           fontSize: "20px",
-          fill: m === mapaS ? "#f0f" : "#fff",
+          fill: m === mapaS ? "magenta" : "white",
         })
         .setInteractive();
       textosMapas.push(tm);
       tm.on("pointerdown", () => {
         mapaS = m;
-        textosMapas.forEach((t) => t.setStyle({ fill: "#fff" }));
-        tm.setStyle({ fill: "#f0f" });
+        textosMapas.forEach((t) => t.setStyle({ fill: "white" }));
+        tm.setStyle({ fill: "magenta" });
       });
     });
 
     const btnStart = this.add
       .text(w / 2, h - 80, "¡LUCHAR!", {
         fontSize: "40px",
-        backgroundColor: "#2ecc71",
+        fill: "white",
+        backgroundColor: "green",
         padding: 20,
       })
       .setOrigin(0.5)
@@ -182,14 +185,23 @@ class GameScene extends Phaser.Scene {
       .image(width / 2, height / 2, configMap.fondo)
       .setDisplaySize(width, height);
 
+    const mapaAudios = {
+      fondoClasico: "musica_clasico",
+      fondoFantasma: "musica_boo",
+      fondoBowser: "musica_bowser",
+    };
+    this.musicaAmbiental = this.sound.add(mapaAudios[configMap.fondo], {
+      loop: true,
+      volume: 0.5,
+    });
+    this.musicaAmbiental.play();
+
     let rivalKey = this.mode === "cpu" ? configMap.enemigo : this.p2Key;
 
-    // --- PERSONAJES ---
     this.player1 = this.physics.add
       .sprite(100, height / 2, this.p1Key)
       .setImmovable(true)
       .setCollideWorldBounds(true);
-
     this.player2 = this.physics.add
       .sprite(width - 100, height / 2, rivalKey)
       .setImmovable(true)
@@ -207,76 +219,81 @@ class GameScene extends Phaser.Scene {
     ajustarEscalaPersonaje(this.player1, this.p1Key);
     ajustarEscalaPersonaje(this.player2, rivalKey);
 
-    // BOLA
     this.ball = this.physics.add
       .sprite(width / 2, height / 2, "bola")
       .setScale(0.12);
-    this.ball.setBounce(1.1, 1.1);
+    this.ball.setBounce(1, 1);
     this.ball.setCollideWorldBounds(true);
     this.physics.world.setBoundsCollision(false, false, true, true);
 
     this.resetBall();
 
-    // --- UI Y MARCADORES ---
+    // UI DE JUGADORES
     this.add.image(60, 40, "toad").setScale(0.3);
     this.add
       .image(width - 60, 40, "toad")
       .setScale(0.3)
       .setFlipX(true);
 
-    // Nombres debajo del marcador
-    this.add
-      .text(60, 150, "J1", {
-        fontSize: "18px",
-        fill: "#fff",
-        stroke: "#000",
-        strokeThickness: 3,
-      })
-      .setOrigin(0.5);
-    let nombreRival = this.mode === "cpu" ? "CPU" : "J2";
-    this.add
-      .text(width - 60, 150, nombreRival, {
-        fontSize: "18px",
-        fill: "#fff",
-        stroke: "#000",
-        strokeThickness: 3,
-      })
-      .setOrigin(0.5);
-
     this.starsP1 = this.add.group();
     this.starsP2 = this.add.group();
 
-    this.physics.add.collider(this.ball, this.player1);
-    this.physics.add.collider(this.ball, this.player2);
+    // COLISIONES CON EFECTO PONG
+    this.physics.add.collider(
+      this.ball,
+      this.player1,
+      this.handlePaddleCollision,
+      null,
+      this,
+    );
+    this.physics.add.collider(
+      this.ball,
+      this.player2,
+      this.handlePaddleCollision,
+      null,
+      this,
+    );
 
     this.keys = this.input.keyboard.addKeys({ W: "W", S: "S", R: "R" });
     this.cursors = this.input.keyboard.createCursorKeys();
   }
 
+  handlePaddleCollision(ball, paddle) {
+    // Calculamos el punto de impacto para la dirección real
+    let relativeIntersectY = (ball.y - paddle.y) / (paddle.displayHeight / 2);
+    let bounceAngle = relativeIntersectY * 550;
+    ball.setVelocityY(bounceAngle);
+
+    // Incremento de velocidad para más dificultad
+    let speedUp = ball.body.velocity.x > 0 ? 40 : -40;
+    ball.setVelocityX(ball.body.velocity.x + speedUp);
+  }
+
   update() {
     if (this.gameOver) {
-      if (this.keys.R.isDown) this.scene.start("MenuScene");
+      if (this.keys.R.isDown) {
+        if (this.musicaAmbiental) this.musicaAmbiental.stop();
+        this.scene.start("MenuScene");
+      }
       return;
     }
 
-    // ROTACIÓN DE LA BOLA
-    this.ball.angle += 10;
+    // Tu instrucción: La bola de fuego debe estar girando
+    this.ball.angle += 12;
 
-    // Movimiento P1
     if (this.keys.W.isDown) this.player1.setVelocityY(-650);
     else if (this.keys.S.isDown) this.player1.setVelocityY(650);
     else this.player1.setVelocityY(0);
 
-    // Movimiento P2 / CPU
     if (this.mode === "local") {
       if (this.cursors.up.isDown) this.player2.setVelocityY(-650);
       else if (this.cursors.down.isDown) this.player2.setVelocityY(650);
       else this.player2.setVelocityY(0);
     } else {
-      let speed = 300 + this.currentLevel * 60;
+      let speed = 320 + this.currentLevel * 65;
       let diff = this.ball.y - this.player2.y;
-      if (this.ball.x > this.scale.width * 0.4) {
-        this.player2.setVelocityY(Phaser.Math.Clamp(diff * 8, -speed, speed));
+      if (this.ball.x > this.scale.width * 0.35) {
+        this.player2.setVelocityY(Phaser.Math.Clamp(diff * 10, -speed, speed));
       } else {
         this.player2.setVelocityY(0);
       }
@@ -308,7 +325,7 @@ class GameScene extends Phaser.Scene {
       .setVelocity(0, 0);
     this.time.delayedCall(800, () => {
       const vx = Math.random() > 0.5 ? 600 : -600;
-      const vy = Phaser.Math.Between(-300, 300);
+      const vy = Phaser.Math.Between(-250, 250);
       if (this.ball.active) this.ball.setVelocity(vx, vy);
     });
   }
@@ -316,13 +333,15 @@ class GameScene extends Phaser.Scene {
   finalizar() {
     this.gameOver = true;
     this.ball.destroy();
+    if (this.musicaAmbiental) this.musicaAmbiental.stop();
+
     let victoria = this.scoreP1 === 5;
     let msg = victoria ? "¡VICTORIA!" : "¡DERROTA!";
     this.add
       .text(this.scale.width / 2, this.scale.height / 2, msg, {
         fontSize: "70px",
-        fill: "#fff",
-        stroke: "#000",
+        fill: "white",
+        stroke: "black",
         strokeThickness: 10,
       })
       .setOrigin(0.5);
@@ -345,7 +364,10 @@ class GameScene extends Phaser.Scene {
           this.scale.width / 2,
           this.scale.height / 2 + 100,
           "R PARA VOLVER",
-          { fontSize: "25px" },
+          {
+            fontSize: "25px",
+            fill: "white",
+          },
         )
         .setOrigin(0.5);
     }
